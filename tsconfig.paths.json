@@ -3,7 +3,10 @@
     "baseUrl": ".",
     "paths": {
       "@functions/*": ["src/functions/*"],
-      "@libs/*": ["src/libs/*"]
+      "@libs/*": ["src/libs/*"],
+      "@query/*": ["src/query/*"],
+      "@config/*": ["src/config/*"],
+      "@interface/*": ["src/interface/*"]
     }
   }
 }

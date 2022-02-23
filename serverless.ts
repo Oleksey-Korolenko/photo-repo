@@ -1,9 +1,19 @@
 import type { AWS } from '@serverless/typescript';
 
-import hello from '@functions/hello';
+import modules from '@functions/index';
+
+import * as dotenv from 'dotenv';
+
+const functions = {};
+
+for (const module of modules) {
+  functions[module.name] = module;
+}
+
+dotenv.config();
 
 const serverlessConfiguration: AWS = {
-  service: 'test',
+  service: 'photo-repo',
   org: 'bubo2scandiacus',
   app: 'photo-repo',
   frameworkVersion: '3',
@@ -19,7 +29,7 @@ const serverlessConfiguration: AWS = {
     runtime: 'nodejs14.x',
     region: 'us-east-1',
   },
-  functions: { hello },
+  functions,
 };
 
 module.exports = serverlessConfiguration;

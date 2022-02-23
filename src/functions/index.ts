@@ -1,1 +1,3 @@
-export { default as hello } from './hello';
+import { default as auth } from './auth';
+
+export default [...auth];
