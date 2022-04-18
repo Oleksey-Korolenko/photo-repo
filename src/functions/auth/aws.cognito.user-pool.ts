@@ -1,6 +1,12 @@
 import { AWSCognitoClientService } from './aws.cognito.client';
 import * as crypto from 'crypto';
-import { ISignUpRequestBody, ISignUpResponseBody } from './interface';
+import {
+  IErrorHandlerResponse,
+  IGetUserResponseBody,
+  IMeRequestBody,
+  ISignUpRequestBody,
+  ISignUpResponseBody,
+} from './interface';
 
 const USER_POOL_ID_MAX_LENGTH = 55;
 
@@ -65,4 +71,14 @@ export class AWSCognitoUserPoolService {
       }
     );
   };
+
+  getUser = async (
+    token: string
+  ): Promise<IGetUserResponseBody | IErrorHandlerResponse> =>
+    this.#client.request<
+      IMeRequestBody,
+      IGetUserResponseBody | IErrorHandlerResponse
+    >('GetUser', {
+      AccessToken: token.replace('Bearer ', ''),
+    });
 }

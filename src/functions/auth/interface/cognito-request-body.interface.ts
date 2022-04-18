@@ -43,3 +43,7 @@ export interface ISignUpRequestBody {
   Password: string;
   UserAttributes: ICognitoAttribute[];
 }
+
+export interface IMeRequestBody {
+  AccessToken: string;
+}

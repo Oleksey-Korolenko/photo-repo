@@ -30,4 +30,4 @@ const notPreparedHandler: ValidatedEventAPIGatewayProxyEvent<
   return formatJSONResponse(response);
 };
 
-export const handler = middyfyForJSON(notPreparedHandler);
+export const handler = middyfyForJSON(notPreparedHandler, false);

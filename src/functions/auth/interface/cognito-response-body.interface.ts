@@ -1,3 +1,5 @@
+import { ICognitoAttribute } from './cognito-config.interface';
+
 export interface IRespondToAuthChallengeResponseBody {
   AuthenticationResult: IAuthenticationResult;
 }
@@ -25,4 +27,9 @@ export interface IInitiateAuthChallengeParameters {
 
 export interface ISignUpResponseBody {
   UserConfirmed: boolean;
+}
+
+export interface IGetUserResponseBody {
+  UserAttributes: ICognitoAttribute[];
+  Username: string;
 }
