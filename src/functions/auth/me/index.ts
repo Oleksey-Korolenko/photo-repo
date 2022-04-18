@@ -1,15 +1,21 @@
 import 'source-map-support/register';
 import { AWSCognitoConfig } from '../aws.cognito.config';
-import { IErrorHandlerResponse, IGetUserResponseBody } from '../interface';
+import { IGetUserResponseBody } from '../interface';
 
-export const userMe = (
-  token: string
-): Promise<IGetUserResponseBody | IErrorHandlerResponse> => {
+export const userMe = (token: string): Promise<string> => {
   const cognitoConfig = new AWSCognitoConfig();
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     cognitoConfig.initAWS();
     const response = await cognitoConfig.getUserPool().getUser(token);
 
-    return resolve(response);
+    if (!{}.hasOwnProperty.call(response, 'Username')) {
+      reject();
+    }
+
+    (response as IGetUserResponseBody).UserAttributes.forEach((it) =>
+      it.Name === 'sub' ? resolve(it.Value) : null
+    );
+
+    reject();
   });
 };

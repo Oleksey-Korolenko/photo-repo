@@ -18,11 +18,8 @@ export const middyfyForJSON = (handler, hasToken: boolean) => {
         next: middy.NextFunction
       ) => {
         const response = await userMe(handler.event.headers.Authorization);
-        if ({}.hasOwnProperty.call(response, 'Username')) {
-          next();
-        } else {
-          throw new Error();
-        }
+        handler.event.userKey = response;
+        next();
       },
       onError: (
         handler: middy.HandlerLambda<ILambdaEvent>,
