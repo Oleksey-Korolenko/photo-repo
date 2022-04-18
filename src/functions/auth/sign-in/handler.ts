@@ -3,7 +3,7 @@ import {
   ValidatedEventAPIGatewayProxyEvent,
   formatJSONResponse,
 } from '@libs/apiGateway';
-import { middyfy } from '@libs/lambda';
+import { middyfyForJSON } from '@libs/lambda';
 import schema from './schema';
 import { AWSCognitoConfig } from '../aws.cognito.config';
 import { IResponse } from '@interface/response.interface';
@@ -38,4 +38,4 @@ const notPreparedHandler: ValidatedEventAPIGatewayProxyEvent<
   return formatJSONResponse<IResponse<ISignInHandlerResponse>>(response);
 };
 
-export const handler = middyfy(notPreparedHandler);
+export const handler = middyfyForJSON(notPreparedHandler);
