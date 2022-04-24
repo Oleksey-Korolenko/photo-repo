@@ -19,13 +19,16 @@ export class AWSS3Config {
     });
   }
 
-  public upload = async (base64Image: string): Promise<IS3UploadResponse> => {
+  public upload = async (
+    base64Image: string,
+    userKey: string
+  ): Promise<IS3UploadResponse> => {
     const randomId = Math.round(Math.random() * 10000000000000);
 
     const { Location, Key } = await this.#S3
       .upload({
         Bucket: this.#s3Config.bucketName,
-        Key: `${randomId}.jpg`,
+        Key: `${userKey}/${randomId}.jpg`,
         Body: Buffer.from(
           base64Image.replace(/^data:image\/\w+;base64,/, ''),
           'base64'
@@ -40,5 +43,19 @@ export class AWSS3Config {
       link: Location,
       fileName: Key,
     };
+  };
+
+  public delete = async (
+    userKey: string,
+    photoId: string
+  ): Promise<boolean> => {
+    const result = await this.#S3
+      .deleteObject({
+        Bucket: this.#s3Config.bucketName,
+        Key: `${userKey}/${photoId}.jpg`,
+      })
+      .promise();
+
+    return result.DeleteMarker;
   };
 }

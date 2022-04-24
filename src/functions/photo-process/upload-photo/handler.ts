@@ -15,7 +15,7 @@ const upload = (
 ): Promise<IResponse<IS3UploadResponse>> => {
   return new Promise(async (resolve) => {
     const s3Config = new AWSS3Config();
-    const response = await s3Config.upload(base64Image);
+    const response = await s3Config.upload(base64Image, userKey);
     return resolve({
       statusCode: 200,
       response,

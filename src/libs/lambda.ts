@@ -14,22 +14,25 @@ export const middyfyForJSON = (handler, hasToken: boolean) => {
   if (hasToken) {
     preparedHandler.use({
       before: async (
-        handler: middy.HandlerLambda<ILambdaEvent>,
-        next: middy.NextFunction
-      ) => {
+        handler: middy.HandlerLambda<ILambdaEvent>
+      ): Promise<void> => {
         const response = await userMe(handler.event.headers.Authorization);
-        handler.event.userKey = response;
-        next();
+
+        if (typeof response === 'boolean') {
+          throw Error();
+        } else {
+          handler.event.userKey = response;
+        }
+
+        return Promise.resolve();
       },
-      onError: (
-        handler: middy.HandlerLambda<ILambdaEvent>,
-        next: middy.NextFunction
-      ) => {
+      onError: (handler: middy.HandlerLambda<ILambdaEvent>): Promise<void> => {
         handler.response = formatJSONResponse<IResponse<string>>({
           statusCode: 403,
           response: 'Unauthorized!',
         });
-        return next();
+
+        return Promise.resolve();
       },
     });
   }

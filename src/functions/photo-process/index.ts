@@ -1,3 +1,4 @@
-import { default as add } from './add';
+import { default as uploadPhoto } from './upload-photo';
+import { default as deletePhoto } from './delete-photo';
 
-export default [add];
+export default [uploadPhoto, deletePhoto];
