@@ -1,6 +1,12 @@
+import { IAWSError } from '@interface/aws-error.interface';
 import { Endpoint, S3 } from 'aws-sdk';
 import { AppConfigService, S3ConfigType } from 'src/config';
-import { IS3UploadResponse } from './interface';
+import {
+  IS3GetListResponse,
+  IS3GetResponse,
+  IS3ObjectResponse,
+  IS3UploadResponse,
+} from './interface';
 
 export class AWSS3Config {
   #s3Config: S3ConfigType;
@@ -57,5 +63,79 @@ export class AWSS3Config {
       .promise();
 
     return result.DeleteMarker;
+  };
+
+  public getObject = async (
+    userKey: string,
+    photoId: string
+  ): Promise<string | IS3GetResponse> => {
+    try {
+      const result = await this.#S3
+        .getObject({
+          Bucket: this.#s3Config.bucketName,
+          Key: `${userKey}/${photoId}.jpg`,
+        })
+        .promise();
+
+      const { ContentLength, ContentEncoding, ContentType, Body } = result;
+
+      return {
+        ContentLength,
+        ContentEncoding,
+        ContentType,
+        Body: Body.toString('base64'),
+        Location: `https://${
+          this.#s3Config.bucketName
+        }.s3.amazonaws.com/${userKey}/${photoId}.jpg`,
+      } as IS3GetResponse;
+    } catch (e) {
+      return this.#checkError(e as IAWSError);
+    }
+  };
+
+  public getListObjects = async (
+    userKey: string,
+    limit: number,
+    startAfter?: string
+  ): Promise<IS3GetListResponse> => {
+    const result = await this.#S3
+      .listObjectsV2({
+        Bucket: this.#s3Config.bucketName,
+        Prefix: `${userKey}/`,
+        MaxKeys: limit,
+        StartAfter:
+          startAfter === undefined ? undefined : `${userKey}/${startAfter}.jpg`,
+      })
+      .promise();
+
+    if (result.KeyCount === 0) {
+      return {
+        Objects: [],
+        KeyCount: 0,
+      };
+    }
+
+    const objects = result.Contents.map(
+      (it) =>
+        ({
+          Location: `https://${this.#s3Config.bucketName}.s3.amazonaws.com/${
+            it.Key
+          }`,
+          Key: it.Key.split('/')[1].split('.')[0],
+        } as IS3ObjectResponse)
+    );
+
+    return {
+      KeyCount: result.KeyCount,
+      Objects: objects,
+    };
+  };
+
+  #checkError = (e: IAWSError): string => {
+    if (e.code === 'NoSuchKey') {
+      return e.message;
+    }
+
+    return 'Something went wrong!';
   };
 }

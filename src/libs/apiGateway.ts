@@ -6,16 +6,20 @@ import type {
 import type { FromSchema } from 'json-schema-to-ts';
 import { ILambdaEvent } from './interface';
 
-type ValidatedAPIGatewayProxyEvent<S> = Omit<APIGatewayProxyEvent, 'body'> & {
+type ValidatedBodyAPIGatewayProxyEvent<S> = Omit<
+  APIGatewayProxyEvent,
+  'body'
+> & {
   body: FromSchema<S>;
 };
-export type ValidatedEventAPIGatewayProxyEvent<S> = Handler<
-  ValidatedAPIGatewayProxyEvent<S>,
+
+export type ValidatedEventBodyAPIGatewayProxyEvent<S> = Handler<
+  ValidatedBodyAPIGatewayProxyEvent<S>,
   APIGatewayProxyResult
 >;
 
-export type ValidatedEventAPIGatewayProxyEventWithUser<S> = Handler<
-  ValidatedAPIGatewayProxyEvent<S> & ILambdaEvent,
+export type ValidatedEventBodyAPIGatewayProxyEventWithUser<S> = Handler<
+  ValidatedBodyAPIGatewayProxyEvent<S> & ILambdaEvent,
   APIGatewayProxyResult
 >;
 

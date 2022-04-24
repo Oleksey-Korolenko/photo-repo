@@ -1,7 +1,7 @@
 import 'source-map-support/register';
 import {
-  ValidatedEventAPIGatewayProxyEvent,
   formatJSONResponse,
+  ValidatedEventBodyAPIGatewayProxyEvent,
 } from '@libs/apiGateway';
 import { middyfyForJSON } from '@libs/lambda';
 import schema from './schema';
@@ -28,7 +28,7 @@ const signUp = async (
   });
 };
 
-const notPreparedHandler: ValidatedEventAPIGatewayProxyEvent<
+const notPreparedHandler: ValidatedEventBodyAPIGatewayProxyEvent<
   typeof schema
 > = async (event) => {
   const { email, password } = event.body;

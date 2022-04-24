@@ -3,6 +3,7 @@ export default {
   properties: {
     email: { type: 'string' },
     code: { type: 'string' },
+    password: { type: 'string' },
   },
-  required: ['email', 'code'],
+  required: ['email', 'code', 'password'],
 } as const;

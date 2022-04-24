@@ -1,7 +1,7 @@
 import 'source-map-support/register';
 import {
   formatJSONResponse,
-  ValidatedEventAPIGatewayProxyEventWithUser,
+  ValidatedEventBodyAPIGatewayProxyEventWithUser,
 } from '@libs/apiGateway';
 import { middyfyForJSON } from '@libs/lambda';
 import schema from './schema';
@@ -27,7 +27,7 @@ const deletePhoto = (
       });
     } else {
       return resolve({
-        statusCode: 400,
+        statusCode: 404,
         response: {
           isCorrect: false,
           message: 'Something went wrong!',
@@ -37,7 +37,7 @@ const deletePhoto = (
   });
 };
 
-const notPreparedHandler: ValidatedEventAPIGatewayProxyEventWithUser<
+const notPreparedHandler: ValidatedEventBodyAPIGatewayProxyEventWithUser<
   typeof schema
 > = async (event) => {
   const response = await deletePhoto(event.userKey, event.body.photoId);

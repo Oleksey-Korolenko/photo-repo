@@ -45,74 +45,78 @@ export default class AWSCognitoUser {
 
   public authenticateUser = async (
     authDetails
-  ): Promise<AWSCognitoUserSession> => {
-    let serverBValue;
-    let salt;
+  ): Promise<AWSCognitoUserSession | string> => {
+    try {
+      let serverBValue;
+      let salt;
 
-    const AuthHelper = new AWSCognitoAuthHelper(
-      this.#pool.getUserPoolId().split('_')[1]
-    );
+      const AuthHelper = new AWSCognitoAuthHelper(
+        this.#pool.getUserPoolId().split('_')[1]
+      );
 
-    const data = await this.#client.request<
-      IInitiateAuthRequestBody,
-      IInitiateAuthResponseBody
-    >('InitiateAuth', {
-      AuthFlow: this.#authenticationFlowType,
-      ClientId: this.#pool.getClientId(),
-      AuthParameters: {
-        USERNAME: this.#username,
-        SECRET_HASH: this.#pool.getClientSecret(this.#username),
-        SRP_A: AuthHelper.getLargeAValue().toString(16),
-        DEVICE_KEY: this.#deviceKey != null ? this.#deviceKey : undefined,
-      },
-    });
+      const data = await this.#client.request<
+        IInitiateAuthRequestBody,
+        IInitiateAuthResponseBody
+      >('InitiateAuth', {
+        AuthFlow: this.#authenticationFlowType,
+        ClientId: this.#pool.getClientId(),
+        AuthParameters: {
+          USERNAME: this.#username,
+          SECRET_HASH: this.#pool.getClientSecret(this.#username),
+          SRP_A: AuthHelper.getLargeAValue().toString(16),
+          DEVICE_KEY: this.#deviceKey != null ? this.#deviceKey : undefined,
+        },
+      });
 
-    const challengeParameters = data.ChallengeParameters;
+      const challengeParameters = data.ChallengeParameters;
 
-    this.#username = challengeParameters.USER_ID_FOR_SRP;
-    serverBValue = new BigInteger(challengeParameters.SRP_B, 16);
-    salt = new BigInteger(challengeParameters.SALT, 16);
+      this.#username = challengeParameters.USER_ID_FOR_SRP;
+      serverBValue = new BigInteger(challengeParameters.SRP_B, 16);
+      salt = new BigInteger(challengeParameters.SALT, 16);
 
-    this.#getCachedDeviceKeyAndPassword();
+      this.#getCachedDeviceKeyAndPassword();
 
-    const hkdf = AuthHelper.getPasswordAuthenticationKey(
-      this.#username,
-      authDetails.Password,
-      serverBValue,
-      salt
-    );
+      const hkdf = AuthHelper.getPasswordAuthenticationKey(
+        this.#username,
+        authDetails.Password,
+        serverBValue,
+        salt
+      );
 
-    const dateNow = DateHelper.getNowString();
+      const dateNow = DateHelper.getNowString();
 
-    const message = lib.WordArray.create(
-      Buffer.concat([
-        Buffer.from(this.#pool.getUserPoolId().split('_')[1], 'utf8'),
-        Buffer.from(this.#username, 'utf8'),
-        Buffer.from(challengeParameters.SECRET_BLOCK, 'base64'),
-        Buffer.from(dateNow, 'utf8'),
-      ]) as unknown as number[]
-    );
+      const message = lib.WordArray.create(
+        Buffer.concat([
+          Buffer.from(this.#pool.getUserPoolId().split('_')[1], 'utf8'),
+          Buffer.from(this.#username, 'utf8'),
+          Buffer.from(challengeParameters.SECRET_BLOCK, 'base64'),
+          Buffer.from(dateNow, 'utf8'),
+        ]) as unknown as number[]
+      );
 
-    const key = lib.WordArray.create(hkdf as unknown as number[]);
-    const signatureString = enc.Base64.stringify(HmacSHA256(message, key));
+      const key = lib.WordArray.create(hkdf as unknown as number[]);
+      const signatureString = enc.Base64.stringify(HmacSHA256(message, key));
 
-    const dataAuthenticate = await this.#client.request<
-      IRespondToAuthChallengeRequestBody,
-      IRespondToAuthChallengeResponseBody
-    >('RespondToAuthChallenge', {
-      ChallengeName: 'PASSWORD_VERIFIER',
-      ClientId: this.#pool.getClientId(),
-      ChallengeResponses: {
-        USERNAME: this.#username,
-        PASSWORD_CLAIM_SECRET_BLOCK: challengeParameters.SECRET_BLOCK,
-        TIMESTAMP: dateNow,
-        PASSWORD_CLAIM_SIGNATURE: signatureString,
-        SECRET_HASH: this.#pool.getClientSecret(this.#username),
-        DEVICE_KEY: this.#deviceKey != null ? this.#deviceKey : undefined,
-      },
-    });
+      const dataAuthenticate = await this.#client.request<
+        IRespondToAuthChallengeRequestBody,
+        IRespondToAuthChallengeResponseBody
+      >('RespondToAuthChallenge', {
+        ChallengeName: 'PASSWORD_VERIFIER',
+        ClientId: this.#pool.getClientId(),
+        ChallengeResponses: {
+          USERNAME: this.#username,
+          PASSWORD_CLAIM_SECRET_BLOCK: challengeParameters.SECRET_BLOCK,
+          TIMESTAMP: dateNow,
+          PASSWORD_CLAIM_SIGNATURE: signatureString,
+          SECRET_HASH: this.#pool.getClientSecret(this.#username),
+          DEVICE_KEY: this.#deviceKey != null ? this.#deviceKey : undefined,
+        },
+      });
 
-    return this.#authenticateUserInternal(dataAuthenticate);
+      return this.#authenticateUserInternal(dataAuthenticate);
+    } catch (e) {
+      return 'Something went wrong!';
+    }
   };
 
   #authenticateUserInternal = (

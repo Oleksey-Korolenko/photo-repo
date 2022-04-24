@@ -7,27 +7,35 @@ import { middyfyForJSON } from '@libs/lambda';
 import schema from './schema';
 import { IResponse } from '@interface/response.interface';
 import { AWSS3Config } from '../aws.s3.config';
-import { IS3UploadResponse } from '../interface';
+import { IS3GetResponse } from '../interface';
 
-const upload = (
-  base64Image: string,
-  userKey: string
-): Promise<IResponse<IS3UploadResponse>> => {
+const getPhoto = (
+  userKey: string,
+  photoId: string
+): Promise<IResponse<IS3GetResponse | string>> => {
   return new Promise(async (resolve) => {
     const s3Config = new AWSS3Config();
-    const response = await s3Config.upload(base64Image, userKey);
-    return resolve({
-      statusCode: 200,
-      response,
-    });
+    const response = await s3Config.getObject(userKey, photoId);
+
+    if (typeof response === 'string') {
+      return resolve({
+        statusCode: 404,
+        response,
+      });
+    } else {
+      return resolve({
+        statusCode: 200,
+        response,
+      });
+    }
   });
 };
 
 const notPreparedHandler: ValidatedEventBodyAPIGatewayProxyEventWithUser<
   typeof schema
 > = async (event) => {
-  const response = await upload(event.body.base64Image, event.userKey);
-  return formatJSONResponse<IResponse<IS3UploadResponse>>(response);
+  const response = await getPhoto(event.userKey, event.body.photoId);
+  return formatJSONResponse<IResponse<IS3GetResponse | string>>(response);
 };
 
 export const handler = middyfyForJSON(notPreparedHandler, true);
