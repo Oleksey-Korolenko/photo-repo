@@ -1,17 +1,14 @@
-import { IToken } from '.';
-
 export interface ISignInHandlerResponse {
-  token: IToken;
-  email: string;
-  exp: number;
-  auth_time: number;
-  token_use: string;
-  uid: string;
+  accessToken: string;
+  idToken: string;
+  refreshToken: string;
 }
 
-export interface ISignUpHandlerResponse {}
+export interface ISignUpHandlerResponse {
+  UserConfirmed: boolean;
+}
 
-export interface IErrorHandlerResponse {
-  __type: string;
-  message: string;
+export interface IHandlerResponseWrapper<Data> {
+  statusCode: number;
+  data: Data | string;
 }

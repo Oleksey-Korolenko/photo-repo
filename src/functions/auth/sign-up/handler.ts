@@ -12,20 +12,15 @@ import { ISignUpHandlerResponse } from '../interface';
 const signUp = async (
   email: string,
   password: string
-): Promise<IResponse<ISignUpHandlerResponse>> => {
+): Promise<IResponse<ISignUpHandlerResponse | string>> => {
   const cognitoConfig = new AWSCognitoConfig();
-  return new Promise(async (resolve) => {
-    cognitoConfig.initAWS();
-    cognitoConfig.setCognitoAttributeList(email);
-    const result = await cognitoConfig
-      .getUserPool()
-      .signUp(email, password, cognitoConfig.getCognitoAttributeList());
 
-    return resolve({
-      statusCode: 201,
-      response: { userConfirmed: result.UserConfirmed },
-    });
-  });
+  const result = await cognitoConfig.signUp(email, password);
+
+  return {
+    statusCode: result.statusCode,
+    response: result.data,
+  };
 };
 
 const notPreparedHandler: ValidatedEventBodyAPIGatewayProxyEvent<
@@ -33,7 +28,9 @@ const notPreparedHandler: ValidatedEventBodyAPIGatewayProxyEvent<
 > = async (event) => {
   const { email, password } = event.body;
   const response = await signUp(email, password);
-  return formatJSONResponse<ISignUpHandlerResponse>(response);
+  return formatJSONResponse<IResponse<ISignUpHandlerResponse | string>>(
+    response
+  );
 };
 
 export const handler = middyfyForJSON(notPreparedHandler, false);

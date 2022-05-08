@@ -31,23 +31,34 @@ export class AWSS3Config {
   ): Promise<IS3UploadResponse> => {
     const randomId = Math.round(Math.random() * 10000000000000);
 
-    const { Location, Key } = await this.#S3
-      .upload({
-        Bucket: this.#s3Config.bucketName,
-        Key: `${userKey}/${randomId}.jpg`,
-        Body: Buffer.from(
-          base64Image.replace(/^data:image\/\w+;base64,/, ''),
-          'base64'
-        ),
-        ACL: 'public-read',
-        ContentEncoding: 'base64',
-        ContentType: 'image/jpeg',
-      })
-      .promise();
+    /* const { Location, Key }  [
+            'starts-with',
+            '$body',
+            Buffer.from(
+              base64Image.replace(/^data:image\/\w+;base64,/, ''),
+              'base64'
+            ),
+          ],*/
+    const result = await this.#S3.createPresignedPost({
+      Bucket: this.#s3Config.bucketName,
+      Conditions: [
+        ['$Content-Type', 'image/jpeg'],
+        ['content-length-range', 0, 1000000],
+        { acl: 'public-read' },
+      ],
+      Fields: {
+        key: `${userKey}/${randomId}.jpg`,
+        success_action_redirect:
+          'http://localhost:3000/dev/s3/upload-photo-form',
+      },
+      Expires: 300,
+    });
+
+    console.log(result);
 
     return {
-      link: Location,
-      fileName: Key,
+      link: 'Location',
+      fileName: 'Key',
     };
   };
 

@@ -9,33 +9,18 @@ import { AWSCognitoConfig } from '../aws.cognito.config';
 import { IResponse } from '@interface/response.interface';
 import { ISignInHandlerResponse } from '../interface';
 
-const signIn = (
+const signIn = async (
   email: string,
   password: string
 ): Promise<IResponse<ISignInHandlerResponse | string>> => {
-  return new Promise(async (resolve) => {
-    const cognitoConfig = new AWSCognitoConfig();
-    const response = await cognitoConfig
-      .getCognitoUser(email)
-      .authenticateUser(cognitoConfig.getAuthDetails(email, password));
+  const cognitoConfig = new AWSCognitoConfig();
 
-    if (typeof response === 'string') {
-      return resolve({
-        statusCode: 404,
-        response,
-      });
-    }
+  const result = await cognitoConfig.initiateAuth(email, password);
 
-    const token = {
-      accessToken: response.getAccessToken().getJwtToken(),
-      idToken: response.getIdToken().getJwtToken(),
-      refreshToken: response.getRefreshToken().getToken(),
-    };
-    return resolve({
-      statusCode: 200,
-      response: cognitoConfig.decodeJWTToken(token),
-    });
-  });
+  return {
+    statusCode: result.statusCode,
+    response: result.data,
+  };
 };
 
 const notPreparedHandler: ValidatedEventBodyAPIGatewayProxyEvent<
