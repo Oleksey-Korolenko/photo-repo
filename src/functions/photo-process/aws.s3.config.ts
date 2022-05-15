@@ -5,7 +5,7 @@ import {
   IS3GetListResponse,
   IS3GetResponse,
   IS3ObjectResponse,
-  IS3UploadResponse,
+  IS3PresignedPostResponse,
 } from './interface';
 
 export class AWSS3Config {
@@ -25,41 +25,22 @@ export class AWSS3Config {
     });
   }
 
-  public upload = async (
-    base64Image: string,
+  public createPresignedPost = async (
     userKey: string
-  ): Promise<IS3UploadResponse> => {
+  ): Promise<IS3PresignedPostResponse> => {
     const randomId = Math.round(Math.random() * 10000000000000);
 
-    /* const { Location, Key }  [
-            'starts-with',
-            '$body',
-            Buffer.from(
-              base64Image.replace(/^data:image\/\w+;base64,/, ''),
-              'base64'
-            ),
-          ],*/
     const result = await this.#S3.createPresignedPost({
       Bucket: this.#s3Config.bucketName,
-      Conditions: [
-        ['$Content-Type', 'image/jpeg'],
-        ['content-length-range', 0, 1000000],
-        { acl: 'public-read' },
-      ],
       Fields: {
         key: `${userKey}/${randomId}.jpg`,
-        success_action_redirect:
-          'http://localhost:3000/dev/s3/upload-photo-form',
+        acl: 'public-read',
       },
-      Expires: 300,
+      Conditions: [{ acl: 'public-read' }],
+      Expires: 600,
     });
 
-    console.log(result);
-
-    return {
-      link: 'Location',
-      fileName: 'Key',
-    };
+    return result as unknown as IS3PresignedPostResponse;
   };
 
   public delete = async (
