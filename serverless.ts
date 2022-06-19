@@ -1,16 +1,16 @@
 import type { AWS } from '@serverless/typescript';
 
-import modules from '@functions/index';
-
 import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+import modules from '@functions/index';
 
 const functions = {};
 
 for (const module of modules) {
   functions[module.name] = module;
 }
-
-dotenv.config();
 
 const serverlessConfiguration: AWS = {
   service: 'photo-repo',

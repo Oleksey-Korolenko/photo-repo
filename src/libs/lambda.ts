@@ -1,4 +1,3 @@
-import { userMe } from '@functions/auth/me';
 import { IResponse } from '@interface/response.interface';
 import * as middy from 'middy';
 import { httpErrorHandler, jsonBodyParser } from 'middy/middlewares';
@@ -16,12 +15,13 @@ export const middyfyForJSON = (handler, hasToken: boolean) => {
       before: async (
         handler: middy.HandlerLambda<ILambdaEvent>
       ): Promise<void> => {
-        const response = await userMe(handler.event.headers.Authorization);
-
-        if (typeof response === 'boolean') {
+        if (
+          handler.event.requestContext.authorizer?.claims?.sub === undefined
+        ) {
           throw Error();
         } else {
-          handler.event.userKey = response;
+          handler.event.userKey =
+            handler.event.requestContext.authorizer.claims.sub;
         }
 
         return Promise.resolve();

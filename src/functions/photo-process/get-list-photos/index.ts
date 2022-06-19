@@ -1,5 +1,8 @@
 import schema from './schema';
 import { handlerPath } from '@libs/handlerResolver';
+import { AppConfigService } from '@config/config.service';
+
+const config = new AppConfigService().get('handler');
 
 export default {
   name: 'get-list-photos',
@@ -13,6 +16,10 @@ export default {
           schema: {
             'application/json': schema,
           },
+        },
+        authorizer: {
+          name: config.authorizerName,
+          arn: config.authorizerArn,
         },
       },
     },
